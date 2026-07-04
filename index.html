@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zipper Production Calculator</title>
+    <!-- Import Tailwind CSS for instant, beautiful styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -16,8 +17,10 @@
         <h2 class="text-2xl font-extrabold text-gray-900 mb-2">Zipper Calculator</h2>
         <p class="text-gray-500 mb-6 text-sm">Calculate required meters and rolls for production.</p>
 
+        <!-- Input Form -->
         <div class="space-y-5">
             <div class="grid grid-cols-2 gap-4">
+                <!-- Zipper Type -->
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Zipper Type</label>
                     <select id="zipType" onchange="calculate()" class="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none">
@@ -25,6 +28,7 @@
                         <option value="CFC">CFC (180m Roll)</option>
                     </select>
                 </div>
+                <!-- Measurement Unit -->
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Unit</label>
                     <select id="unit" onchange="calculate()" class="w-full border border-gray-300 rounded-lg px-4 py-2 bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none">
@@ -35,10 +39,12 @@
             </div>
 
             <div class="grid grid-cols-2 gap-4">
+                <!-- Requested Size -->
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Size per Zip</label>
                     <input type="number" id="size" placeholder="e.g. 45" oninput="calculate()" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
                 </div>
+                <!-- Quantity -->
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-1">Quantity (pcs)</label>
                     <input type="number" id="qty" placeholder="e.g. 20" oninput="calculate()" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
@@ -46,6 +52,7 @@
             </div>
         </div>
 
+        <!-- Results Section -->
         <div class="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-xl">
             <h3 class="text-blue-800 text-xs font-bold uppercase tracking-wider mb-4">Production Requirements</h3>
             
@@ -60,6 +67,7 @@
                 </div>
             </div>
 
+            <!-- Mathematical Breakdown -->
             <div class="pt-4 border-t border-blue-200">
                 <p id="breakdown" class="text-xs text-blue-600 font-medium leading-relaxed">
                     Enter your measurements above to see the calculation breakdown.
@@ -68,6 +76,7 @@
         </div>
     </div>
 
+    <!-- The Mathematical Brain (JavaScript) -->
     <script>
         function calculate() {
             // 1. Get the values from the inputs
@@ -89,7 +98,7 @@
             if (unit === 'cm') {
                 allowance = 5; // 5cm for both Vislon and CFC
             } else if (unit === 'inches') {
-                allowance = (type === 'Vislon') ? 1.5 : 1.5; // 2 inches for Vislon, 1.5 for CFC
+                allowance = 1.5; // Updated: Now 1.5 inches for BOTH Vislon and CFC
             }
 
             // 3. Calculate Effective Size
