@@ -128,17 +128,20 @@
                 `Calculation: (${size}${unitLabel} + ${allowance}${unitLabel} allowance) × ${qty} pcs = ${totalMeters.toFixed(2)} meters.`;
         }
     </script>
-    <button onclick="toggleCalculator()" class="fixed bottom-6 right-6 bg-gray-900 text-white p-4 rounded-full shadow-2xl hover:bg-gray-800 transition transform hover:scale-110 z-50 text-2xl border-4 border-black">
+    <button onclick="toggleCalculator()" class="fixed bottom-6 right-6 bg-gray-900 text-white p-4 rounded-full shadow-2xl hover:bg-gray-800 transition transform hover:scale-110 z-50 text-2xl border-4 border-white">
         🧮
     </button>
 
-    <div id="calcModal" class="hidden fixed bottom-24 right-6 bg-white p-5 rounded-2xl shadow-2xl border border-gray-200 w-64 z-50">
+    <div id="calcModal" class="hidden fixed bottom-24 right-6 bg-white p-5 rounded-2xl shadow-2xl border border-gray-200 w-72 z-50">
         <div class="flex justify-between items-center mb-3">
             <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider">Quick Calc</h3>
             <button onclick="toggleCalculator()" class="text-gray-400 hover:text-red-500 font-bold text-xl">&times;</button>
         </div>
         
-        <input type="text" id="calcDisplay" class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-right text-2xl font-mono mb-4 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-gray-800 shadow-inner" placeholder="0" readonly>
+        <div class="mb-4 bg-gray-50 border border-gray-200 rounded-lg shadow-inner flex flex-col justify-end overflow-hidden">
+            <input type="text" id="calcDisplay" class="w-full bg-transparent px-3 pt-3 pb-0 text-right text-2xl font-mono focus:outline-none text-gray-800" placeholder="0" readonly>
+            <div id="calcPreview" class="text-right text-gray-400 text-sm px-3 pb-2 h-7 font-mono font-bold overflow-hidden whitespace-nowrap"></div>
+        </div>
         
         <div class="grid grid-cols-4 gap-2">
             <button onclick="calcInput('7')" class="bg-gray-100 hover:bg-gray-200 p-3 rounded-lg font-bold text-gray-700 transition">7</button>
@@ -161,68 +164,113 @@
             <button onclick="calcInput('.')" class="bg-gray-100 hover:bg-gray-200 p-3 rounded-lg font-bold text-gray-700 transition">.</button>
             <button onclick="calcInput('+')" class="bg-blue-50 text-blue-600 hover:bg-blue-100 p-3 rounded-lg font-bold transition">&plus;</button>
 
-            <button onclick="calcCalculate()" class="col-span-4 bg-blue-600 text-white hover:bg-blue-700 p-3 rounded-lg font-bold mt-2 shadow-md transition">=</button>
+            <button onclick="calcCalculate()" class="col-span-4 bg-blue-600 text-white hover:bg-blue-700 p-3 rounded-lg font-bold mt-2 shadow-md transition text-xl">=</button>
         </div>
     </div>
 
     <script>
         let isCalcOpen = false;
         const calcDisplay = document.getElementById('calcDisplay');
+        const calcPreview = document.getElementById('calcPreview');
 
         function toggleCalculator() {
             const modal = document.getElementById('calcModal');
             isCalcOpen = !isCalcOpen;
             modal.classList.toggle('hidden');
+            
+            // Auto-focus the calculator so you can type immediately
+            if (isCalcOpen) {
+                setTimeout(() => calcDisplay.focus(), 100);
+            }
+        }
+
+        // --- Live Preview Engine ---
+        function updateLivePreview() {
+            // Force auto-scroll to the very right
+            calcDisplay.scrollLeft = calcDisplay.scrollWidth;
+            
+            let expression = calcDisplay.value;
+            if (!expression) {
+                calcPreview.innerText = '';
+                return;
+            }
+
+            // Remove trailing math symbols before running the live preview
+            if (/[+\-*/.]$/.test(expression)) {
+                expression = expression.slice(0, -1);
+            }
+
+            try {
+                // Only show live preview if there's an actual calculation happening
+                if (/[+\-*/]/.test(expression)) {
+                    let result = new Function('return ' + expression)();
+                    if (!Number.isInteger(result)) {
+                        result = parseFloat(result.toFixed(4));
+                    }
+                    calcPreview.innerText = '= ' + result;
+                } else {
+                    calcPreview.innerText = '';
+                }
+            } catch (e) {
+                calcPreview.innerText = '';
+            }
         }
 
         function calcInput(val) {
-            // Prevent multiple decimals in one number
             if (val === '.' && calcDisplay.value.includes('.') && !calcDisplay.value.match(/[+\-*/]/)) return; 
             calcDisplay.value += val;
+            updateLivePreview();
+        }
+        
+        function calcBackspace() {
+            calcDisplay.value = calcDisplay.value.slice(0, -1);
+            updateLivePreview();
         }
 
         function calcClear() {
             calcDisplay.value = '';
+            updateLivePreview();
         }
 
         function calcCalculate() {
             try {
                 if (calcDisplay.value === '') return;
-                // Secure calculation string evaluation
                 let result = new Function('return ' + calcDisplay.value)();
                 
-                // Limit to 4 decimal places so it fits on screen nicely
                 if (!Number.isInteger(result)) {
                     result = parseFloat(result.toFixed(4));
                 }
                 
                 calcDisplay.value = result;
+                calcPreview.innerText = ''; // Clear preview after hitting equals
+                calcDisplay.scrollLeft = calcDisplay.scrollWidth; 
             } catch (error) {
                 calcDisplay.value = 'Error';
-                setTimeout(calcClear, 1200); // Auto clear error after a second
+                calcPreview.innerText = '';
+                setTimeout(calcClear, 1200); 
             }
         }
 
-        // Listen for Keyboard typing ANYWHERE on the screen (if calculator is open)
+        // Enhanced Keyboard Support
         document.addEventListener('keydown', function(event) {
-            if (!isCalcOpen) return; // Ignore keyboard if calc is closed
+            if (!isCalcOpen) return; 
 
             const validKeys = '0123456789+-*/.';
             
             if (validKeys.includes(event.key)) {
-                event.preventDefault(); // Stop page from scrolling if hitting space/etc
+                event.preventDefault(); 
                 calcInput(event.key);
             } else if (event.key === 'Enter' || event.key === '=') {
                 event.preventDefault();
                 calcCalculate();
             } else if (event.key === 'Backspace') {
                 event.preventDefault();
-                calcDisplay.value = calcDisplay.value.slice(0, -1);
+                calcBackspace();
             } else if (event.key === 'Escape' || event.key === 'c' || event.key === 'C') {
+                event.preventDefault();
                 calcClear();
             }
         });
     </script>
-
 </body>
 </html>
